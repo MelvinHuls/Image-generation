@@ -1,3 +1,5 @@
+package image_generation;
+
 import java.io.File;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
@@ -8,13 +10,22 @@ import java.util.ArrayList;
 class Images {	
 	public static final int WHITE = -1;
 	public static final int BLACK = -16777216;
-	public static final String name = "./images/img";
 	public static int index = 0;
 	public static BufferedImage image;
 	private static int RANGE = 50;	
 	private static int ROUNDRANGE = 2;
+	private static BufferedImage previousImage;
 	
 	private static List<Coordinate> coordinates;
+	
+	public void setPreviousImage(BufferedImage previousImage) {
+		this.previousImage = previousImage;
+	}
+	
+	
+	public void setRANGE(int range) {
+		this.RANGE = range;
+	}
 	
 	public static void main(String[] args) throws Exception {
 		Integer width = Integer.valueOf(args[0]);
@@ -39,15 +50,18 @@ class Images {
 				}
 			} else {			
 				for(int i = 0; i < amount; i++) {
-					getImageFromArray(width,height,"./images/random" + i + ".png");
+					getImageFromArray(width,height,true,"./images/random" + i + ".png");
 				}
 			}
 		} else {
 			System.out.println("Don't forget your image dimensions");
 		}
 	}
+	public static BufferedImage getImageFromArray(int width, int height) throws Exception{
+		return getImageFromArray(width,height,false,"");
+	}
 	
-	public static void getImageFromArray(int width, int height, String name) throws Exception{
+	public static BufferedImage getImageFromArray(int width, int height, boolean writeToFile, String name) throws Exception{
 		try {
 			image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);			
 			for(int w = 0; w < width; w++) {
@@ -56,8 +70,12 @@ class Images {
 				}
 			}
 			
-			File outputfile = new File(name);
-			ImageIO.write(image, "png", outputfile);
+			if(writeToFile) {
+				File outputfile = new File(name);
+				ImageIO.write(image, "png", outputfile);
+			}
+			
+			return image;
 		} catch (Exception ex) {
 			System.err.println("You done fucked up ");
 			throw ex; 	
@@ -66,33 +84,18 @@ class Images {
 	
 	private static Color averageColor(int w, int h) {
 		int[] rgb = new int[4];
-		if(w > 0) {
-			addColor(rgb,w-1,h);
-			
-			if(h > 0) {
-				addColor(rgb,w-1,h-1);
-				
-				if(h > 1) 
-					addColor(rgb,w-1,h-2);				
-			}
-		}
-		if(h>0){				
-			addColor(rgb,w,h-1);
-			
-			if(h>1)
-				addColor(rgb,w,h-2);
-		}
-		if(w > 1) {
-			addColor(rgb,w-2,h);
-			
-			if(h > 0) {
-				addColor(rgb,w-2,h-1);
-				
-				if(h > 1) 
-					addColor(rgb,w-2,h-2);
-			}
-		}	
-		if(rgb[3] <= 0) {return new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));}
+		
+		int rangeI = w;
+		int rangeJ = h;
+		if(rangeI > ROUNDRANGE) rangeI = ROUNDRANGE;
+		if(rangeJ > ROUNDRANGE) rangeJ = ROUNDRANGE;		
+		
+		for(int i = 0; i <= rangeI; i++) {
+			for(int j = 0; j <= rangeJ; j++)
+				addColor(rgb,w-i,h-j);
+		}		
+		
+		if(rgb[3] <= 0) {return new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));} 
 		return new Color(rgb[0]/rgb[3], rgb[1]/rgb[3], rgb[2]/rgb[3]);
 	}
 	
@@ -165,6 +168,11 @@ class Images {
 			averageColor = averageColorAllAround(w,h, widthImage, heightImage);
 		} else {
 			averageColor = averageColor(w,h);			
+		}
+		
+		if(previousImage != null) {
+			Color prevImgColor = new Color(previousImage.getRGB(w,h));
+			averageColor = new Color((averageColor.getRed() + prevImgColor.getRed())/2, (averageColor.getGreen() + prevImgColor.getGreen())/2, (averageColor.getBlue() + prevImgColor.getBlue())/2);
 		}
 		
 		int red = averageColor.getRed() + (int)(Math.random()*2*(RANGE+1))-RANGE;
