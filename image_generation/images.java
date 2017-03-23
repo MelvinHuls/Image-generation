@@ -82,7 +82,7 @@ class Images {
 		}
 	}	
 	
-	private static Color averageColor(int w, int h) {
+	private static Color averageColor(int w, int h, BufferedImage image) {
 		int[] rgb = new int[4];
 		
 		int rangeI = w;
@@ -92,14 +92,14 @@ class Images {
 		
 		for(int i = 0; i <= rangeI; i++) {
 			for(int j = 0; j <= rangeJ; j++)
-				addColor(rgb,w-i,h-j);
+				addColor(rgb,w-i,h-j,image);
 		}		
 		
 		if(rgb[3] <= 0) {return new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));} 
 		return new Color(rgb[0]/rgb[3], rgb[1]/rgb[3], rgb[2]/rgb[3]);
 	}
 	
-	private static void addColor(int[] rgb, int w, int h) {
+	private static void addColor(int[] rgb, int w, int h, BufferedImage image) {
 		if(image.getRGB(w,h) != BLACK){
 			Color temp = new Color(image.getRGB(w,h));
 			rgb[0] += temp.getRed();
@@ -165,13 +165,13 @@ class Images {
 	private static int getNewColorRGB(int w, int h, int widthImage, int heightImage, boolean allAround) {
 		Color averageColor;
 		if(allAround) {
-			averageColor = averageColorAllAround(w,h, widthImage, heightImage);
+			averageColor = averageColorAllAround(w,h, widthImage, heightImage, image);
 		} else {
-			averageColor = averageColor(w,h);			
+			averageColor = averageColor(w,h,image);			
 		}
 		
 		if(previousImage != null) {
-			Color prevImgColor = new Color(previousImage.getRGB(w,h));
+			Color prevImgColor = averageColorAllAround(w,h,widthImage,heightImage,previousImage);
 			averageColor = new Color((averageColor.getRed() + prevImgColor.getRed())/2, (averageColor.getGreen() + prevImgColor.getGreen())/2, (averageColor.getBlue() + prevImgColor.getBlue())/2);
 		}
 		
@@ -185,7 +185,7 @@ class Images {
 		return new Color(red,green,blue).getRGB();
 	}
 	
-	private static Color averageColorAllAround(int w, int h, int widthImage, int heightImage) {
+	private static Color averageColorAllAround(int w, int h, int widthImage, int heightImage, BufferedImage image) {
 		int[] rgb = new int[4];
 		
 		int rangeI = (widthImage-1) - w;
@@ -196,7 +196,7 @@ class Images {
 		
 		for(int i = 0; i <= rangeI; i++) {
 			for(int j = 0; j <= rangeJ; j++)
-				addColor(rgb,w+i,h+j);
+				addColor(rgb,w+i,h+j,image);
 		}
 		
 		rangeI = w;
@@ -206,7 +206,7 @@ class Images {
 		
 		for(int i = 0; i <= rangeI; i++) {
 			for(int j = 0; j <= rangeJ; j++)
-				addColor(rgb,w-i,h-j);
+				addColor(rgb,w-i,h-j,image);
 		}		
 		
 		if(rgb[3] <= 0) {return new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));} 
